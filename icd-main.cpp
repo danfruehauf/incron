@@ -63,6 +63,7 @@
           "  -h, --help                   prints this help text\n" \
           "  -n, --foreground             runs on foreground (no daemonizing)\n" \
           "  -k, --kill                   terminates running instance of incrond\n" \
+          "  -r, --recursive              set recursive watches on directories\n" \
           "  -f <FILE>, --config=<FILE>   overrides default configuration file  (requires root privileges)\n" \
           "  -m <INT>, --max=<INT>        max processes to allow\n" \
           "  -V, --version                prints program version\n\n" \
@@ -307,6 +308,7 @@ int main(int argc, char** argv)
       &&  AppArgs::AddOption("help",        'h', AAT_NO_VALUE, false)
       &&  AppArgs::AddOption("foreground",  'n', AAT_NO_VALUE, false)
       &&  AppArgs::AddOption("kill",        'k', AAT_NO_VALUE, false)
+      &&  AppArgs::AddOption("recursive",   'r', AAT_NO_VALUE, false)
       &&  AppArgs::AddOption("config",      'f', AAT_MANDATORY_VALUE, false)
       &&  AppArgs::AddOption("max",         'm', AAT_MANDATORY_VALUE, false)
       &&  AppArgs::AddOption("version",     'V', AAT_NO_VALUE, false)))
@@ -367,6 +369,8 @@ int main(int argc, char** argv)
   if (AppArgs::ExistsOption("foreground"))
     g_daemon = false;
 
+  if (AppArgs::ExistsOption("recursive"))
+    UserTable::EnableRecursive();
 
   openlog(INCROND_NAME, INCRON_LOG_OPTS, INCRON_LOG_FACIL);
 

@@ -481,21 +481,6 @@ public:
     return m_fEnabled;
   }
   
-  /// Checks whether the watch is recursive.
-  /**
-   * A recursive watch monitors a directory itself and all
-   * its subdirectories. This watch is a logical object
-   * which may have many underlying kernel watches.
-   * 
-   * \return currently always false (recursive watches not yet supported)
-   * \attention Recursive watches are currently NOT supported.
-   *            They are planned for future versions.
-   */
-  inline bool IsRecursive() const
-  {
-    return false;    
-  }
-  
 private:
   friend class Inotify;
 

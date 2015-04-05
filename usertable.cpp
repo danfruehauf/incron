@@ -22,7 +22,9 @@
 #include <pwd.h>
 #include <syslog.h>
 #include <errno.h>
+#include <dirent.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <grp.h>
 #include <stdlib.h>
@@ -235,6 +237,7 @@ void EventDispatcher::ProcessMgmtEvents()
 
 
 size_t UserTable::m_maxForks = 0;
+bool UserTable::m_recursive = false;
 
 UserTable::UserTable(EventDispatcher* pEd, const std::string& rUser, bool fSysTable)
 : m_user(rUser),
@@ -251,6 +254,79 @@ UserTable::~UserTable()
   Dispose();
 }
 
+bool UserTable::IsDirectory(const std::string& sPath)
+{
+  static struct stat64 sStat;
+
+  if (-1 != lstat64(sPath.c_str(), &sStat) && S_ISDIR(sStat.st_mode)) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+void UserTable::GetDirectoryTree(const std::string& sPath, TPathList& rResults)
+{
+  struct dirent* ent;
+  DIR* dir;
+
+  dir = opendir(sPath.c_str());
+  if (!dir) {
+    syslog(LOG_WARNING, "could not open directory %s: %s", sPath.c_str(), strerror(errno));
+    return;
+  }
+
+  rResults.push_back(sPath);
+
+  ent = readdir(dir);
+  while (ent) {
+    std::string sFullPath = sPath + "/" + ent->d_name;
+    std::string sEntry(ent->d_name);
+    if ("." != sEntry && ".." != sEntry && IsDirectory(sFullPath)) {
+      GetDirectoryTree(sFullPath, rResults);
+    }
+    ent = readdir(dir);
+  }
+  closedir(dir);
+}
+
+void UserTable::AddWatch(const std::string& sPath, IncronTabEntry* pEntry)
+{
+  InotifyWatch* pW = new InotifyWatch(sPath, pEntry->GetMask());
+
+  syslog(LOG_DEBUG, "adding directory watch %s", sPath.c_str());
+
+  // warning only - permissions may change later
+  if (!(m_fSysTable || MayAccess(sPath, DONT_FOLLOW(pEntry->GetMask()))))
+    syslog(LOG_WARNING, "access denied on %s - events will be discarded silently", sPath.c_str());
+
+  try {
+    m_in.Add(pW);
+    m_map.insert(IWCE_MAP::value_type(pW, pEntry));
+  } catch (InotifyException& e) {
+    if (m_fSysTable)
+      syslog(LOG_ERR, "cannot create watch for system table %s: (%i) %s", m_user.c_str(), e.GetErrorNumber(), strerror(e.GetErrorNumber()));
+    else
+      syslog(LOG_ERR, "cannot create watch for user %s: (%i) %s", m_user.c_str(), e.GetErrorNumber(), strerror(e.GetErrorNumber()));
+    delete pW;
+  }
+}
+
+void UserTable::RemoveWatch(const std::string& sPath)
+{
+  IWCE_MAP::iterator it = m_map.begin();
+  for (; it != m_map.end(); ++it) {
+    if (it->first->GetPath() == sPath) {
+      syslog(LOG_DEBUG, "removing directory watch %s", sPath.c_str());
+      m_in.Remove(it->first);
+      delete it->first;
+      m_map.erase(it);
+      return;
+    }
+  }
+}
+
 void UserTable::Load()
 {
   m_tab.Load(m_fSysTable
@@ -260,21 +336,15 @@ void UserTable::Load()
   int cnt = m_tab.GetCount();
   for (int i=0; i<cnt; i++) {
     IncronTabEntry& rE = m_tab.GetEntry(i);
-    InotifyWatch* pW = new InotifyWatch(rE.GetPath(), rE.GetMask());
 
-    // warning only - permissions may change later
-    if (!(m_fSysTable || MayAccess(rE.GetPath(), DONT_FOLLOW(rE.GetMask()))))
-      syslog(LOG_WARNING, "access denied on %s - events will be discarded silently", rE.GetPath().c_str());
+    TPathList Paths;
+    if (m_recursive)
+      GetDirectoryTree(rE.GetPath(), Paths);
+    else
+      Paths.push_back(rE.GetPath());
 
-    try {
-      m_in.Add(pW);
-      m_map.insert(IWCE_MAP::value_type(pW, &rE));
-    } catch (InotifyException e) {
-      if (m_fSysTable)
-        syslog(LOG_ERR, "cannot create watch for system table %s: (%i) %s", m_user.c_str(), e.GetErrorNumber(), strerror(e.GetErrorNumber()));
-      else
-        syslog(LOG_ERR, "cannot create watch for user %s: (%i) %s", m_user.c_str(), e.GetErrorNumber(), strerror(e.GetErrorNumber()));
-      delete pW;
+    for (TPathList::const_iterator iter = Paths.begin(); iter != Paths.end(); ++iter) {
+      AddWatch(*iter, &rE);
     }
   }
 
@@ -307,6 +377,17 @@ void UserTable::Dispose()
   }
 
   m_map.clear();
+}
+
+void UserTable::OnEventDirectory(const InotifyEvent& rEvt, InotifyWatch* pWatch, IncronTabEntry* pEntry)
+{
+  if (rEvt.IsType(IN_ISDIR)) {
+    std::string sDirectoryPath = pWatch->GetPath() + "/" + IncronTabEntry::GetSafePath(rEvt.GetName());
+
+    if (rEvt.IsType(IN_DELETE) || rEvt.IsType(IN_MOVED_FROM)) {
+      RemoveWatch(sDirectoryPath);
+    }
+  }
 }
 
 void UserTable::OnEvent(InotifyEvent& rEvt)
@@ -419,6 +500,9 @@ void UserTable::OnEvent(InotifyEvent& rEvt)
     }
 
     s_procMap.insert(PROC_MAP::value_type(pid, pd));
+
+    // Remove watches if it's a directory
+    OnEventDirectory(rEvt, pW, pE);
   }
   else {
     if (pE->IsNoLoop())
