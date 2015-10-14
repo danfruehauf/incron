@@ -177,6 +177,17 @@ public:
    *            which has been caused by the processes.
    */
   static void FinishDone();
+
+  /// Checks all processes, see which have finished
+  /**
+   */
+  static void ClearProcesses();
+
+  /// Removes an entry from s_procMap
+  /**
+   * \param[in] pid pid of process to clear
+   */
+  static void ClearProcess(pid_t pid);
   
   /// Checks whether the user may access a file.
   /**
@@ -228,14 +239,23 @@ public:
    * \attention Don't call from the main process (before forking)!
    */
   void RunAsUser(char* const* argv) const;
+
+  /// Sets max fork()s allowed
+  /**
+   * \param[in] maxForks Max forks
+   */
+  static void SetMaxForks(size_t maxForks) {
+    m_maxForks = maxForks;
+  }
   
 private:
-  Inotify m_in;           ///< inotify object
-  EventDispatcher* m_pEd; ///< event dispatcher
-  std::string m_user;     ///< user name
-  bool m_fSysTable;       ///< system table yes/no
-  IncronTab m_tab;        ///< incron table
-  IWCE_MAP m_map;         ///< watch-to-entry mapping
+  Inotify m_in;             ///< inotify object
+  EventDispatcher* m_pEd;   ///< event dispatcher
+  std::string m_user;       ///< user name
+  bool m_fSysTable;         ///< system table yes/no
+  IncronTab m_tab;          ///< incron table
+  IWCE_MAP m_map;           ///< watch-to-entry mapping
+  static size_t m_maxForks; ///< max forks we can spawn
 
   static PROC_MAP s_procMap;  ///< child process mapping
   

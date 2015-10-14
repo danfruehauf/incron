@@ -234,6 +234,7 @@ void EventDispatcher::ProcessMgmtEvents()
 
 
 
+size_t UserTable::m_maxForks = 0;
 
 UserTable::UserTable(EventDispatcher* pEd, const std::string& rUser, bool fSysTable)
 : m_user(rUser),
@@ -383,6 +384,13 @@ void UserTable::OnEvent(InotifyEvent& rEvt)
   if (pE->IsNoLoop())
     pW->SetEnabled(false);
 
+  if (m_maxForks > 0 && s_procMap.size() >= m_maxForks) {
+    // time to wait for a forked process to finish before we continue
+    int status;
+    pid_t res = wait(&status);
+    UserTable::ClearProcess(res);
+  }
+
   pid_t pid = fork();
   if (pid == 0) {
 
@@ -473,13 +481,31 @@ void UserTable::FinishDone()
   pid_t res = 0;
   int status = 0;
   while ((res = waitpid(-1, &status, WNOHANG)) > 0) {
-    PROC_MAP::iterator it = s_procMap.find(res);
-    if (it != s_procMap.end()) {
-      ProcData_t pd = (*it).second;
-      if (pd.onDone != NULL)
-        (*pd.onDone)(pd.pWatch);
-      s_procMap.erase(it);
+    ClearProcess(res);
+  }
+}
+
+void UserTable::ClearProcess(pid_t pid)
+{
+  PROC_MAP::iterator it = s_procMap.find(pid);
+  if (it != s_procMap.end()) {
+    ProcData_t pd = (*it).second;
+    if (pd.onDone != NULL)
+      (*pd.onDone)(pd.pWatch);
+    s_procMap.erase(it);
+  }
+}
+
+void UserTable::ClearProcesses()
+{
+  int status = 0;
+
+  PROC_MAP::iterator it = s_procMap.begin();
+  while (it != s_procMap.end()) {
+    if (waitpid(it->first, &status, WNOHANG) > 0) {
+      ClearProcess(it->first);
     }
+    it++;
   }
 }
 

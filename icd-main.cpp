@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <sys/poll.h>
 #include <sys/stat.h>
+#include <stdlib.h>
 #include <cstdio>
 #include <cstring>
 
@@ -63,6 +64,7 @@
           "  -n, --foreground             runs on foreground (no daemonizing)\n" \
           "  -k, --kill                   terminates running instance of incrond\n" \
           "  -f <FILE>, --config=<FILE>   overrides default configuration file  (requires root privileges)\n" \
+          "  -m <INT>, --max=<INT>        max processes to allow\n" \
           "  -V, --version                prints program version\n\n" \
           "For reporting bugs please use http://bts.aiken.cz\n"
 
@@ -306,6 +308,7 @@ int main(int argc, char** argv)
       &&  AppArgs::AddOption("foreground",  'n', AAT_NO_VALUE, false)
       &&  AppArgs::AddOption("kill",        'k', AAT_NO_VALUE, false)
       &&  AppArgs::AddOption("config",      'f', AAT_MANDATORY_VALUE, false)
+      &&  AppArgs::AddOption("max",         'm', AAT_MANDATORY_VALUE, false)
       &&  AppArgs::AddOption("version",     'V', AAT_NO_VALUE, false)))
   {
     fprintf(stderr, "error while initializing application");
@@ -327,6 +330,13 @@ int main(int argc, char** argv)
   if (AppArgs::ExistsOption("version")) {
     fprintf(stderr, "%s\n", INCROND_VERSION);
     return 0;
+  }
+
+  if (AppArgs::ExistsOption("max")) {
+    std::string maxForksString;
+    AppArgs::GetOption("max", maxForksString);
+    size_t maxForks = atoi(maxForksString.c_str());
+    UserTable::SetMaxForks(maxForks);
   }
 
   IncronCfg::Init();
@@ -448,7 +458,6 @@ int main(int argc, char** argv)
     syslog(LOG_NOTICE, "ready to process filesystem events");
 
     while (!g_fFinish) {
-
       int res = poll(ed.GetPollData(), ed.GetSize(), -1);
 
       if (res > 0) {
