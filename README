@@ -28,7 +28,7 @@ rather than time periods.
 * GCC 4.x compiler (probably works also with GCC 3.4, possibly with
   older versions too)
 
-  
+
 3. How to build
 Because this version is very early it does not contain a standard
 portable build mechanism. There is only a Makefile which must be

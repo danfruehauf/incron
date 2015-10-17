@@ -2,11 +2,11 @@
 /// inotify C++ interface header
 /**
  * \file inotify-cxx.h
- * 
+ *
  * inotify C++ interface
- * 
+ *
  * Copyright (C) 2006, 2007, 2008 Lukas Jelinek, <lukas@aiken.cz>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of one of the following licenses:
  *
@@ -16,7 +16,7 @@
  *
  * If you want to help with choosing the best license for you,
  * please visit http://www.gnu.org/licenses/license-list.html.
- * 
+ *
  */
 
 
@@ -52,7 +52,7 @@
  */
 #define IN_EXC_MSG(msg) (std::string(__PRETTY_FUNCTION__) + ": " + msg)
 
-/// inotify capability/limit identifiers 
+/// inotify capability/limit identifiers
 typedef enum
 {
   IN_MAX_EVENTS     = 0,  ///< max. events in the kernel queue
@@ -65,16 +65,16 @@ typedef enum
  * If this symbol is defined you can use this interface safely
  * threaded applications. Remember that it slightly degrades
  * performance.
- * 
+ *
  * Even if INOTIFY_THREAD_SAFE is defined some classes stay
  * unsafe. If you must use them (must you?) in more than one
  * thread concurrently you need to implement explicite locking.
- * 
+ *
  * You need not to define INOTIFY_THREAD_SAFE in that cases
  * where the application is multithreaded but all the inotify
  * infrastructure will be managed only in one thread. This is
  * the recommended way.
- * 
+ *
  * Locking may fail (it is very rare but not impossible). In this
  * case an exception is thrown. But if unlocking fails in case
  * of an error it does nothing (this failure is ignored).
@@ -97,7 +97,7 @@ typedef enum
       throw InotifyException(IN_EXC_MSG("cannot initialize lock"), res, this); \
     pthread_rwlockattr_destroy(&attr); \
   }
- 
+
 #define IN_LOCK_DONE pthread_rwlock_destroy(&__m_lock);
 
 #define IN_READ_BEGIN \
@@ -106,23 +106,23 @@ typedef enum
     if (res != 0) \
       throw InotifyException(IN_EXC_MSG("locking for reading failed"), res, (void*) this); \
   }
-  
+
 #define IN_READ_END \
   { \
     int res = pthread_rwlock_unlock(&__m_lock); \
     if (res != 0) \
       throw InotifyException(IN_EXC_MSG("unlocking failed"), res, (void*) this); \
   }
-  
+
 #define IN_READ_END_NOTHROW pthread_rwlock_unlock(&__m_lock);
-  
+
 #define IN_WRITE_BEGIN \
   { \
     int res = pthread_rwlock_wrlock(&__m_lock); \
     if (res != 0) \
       throw InotifyException(IN_EXC_MSG("locking for writing failed"), res, (void*) this); \
   }
-  
+
 #define IN_WRITE_END IN_READ_END
 #define IN_WRITE_END_NOTHROW IN_READ_END_NOTHROW
 
@@ -153,7 +153,7 @@ class Inotify;
  * This class allows to acquire information about exceptional
  * events. It makes easier to log or display error messages
  * and to identify problematic code locations.
- * 
+ *
  * Although this class is basically thread-safe it is not intended
  * to be shared between threads.
  */
@@ -172,7 +172,7 @@ public:
   {
     m_pSrc = pSrc;
   }
-  
+
   /// Returns the exception message.
   /**
    * \return message
@@ -181,18 +181,18 @@ public:
   {
     return m_msg;
   }
-  
+
   /// Returns the exception error number.
   /**
    * If not applicable this value is 0 (zero).
-   * 
+   *
    * \return error number (standardized; see errno.h)
    */
   inline int GetErrorNumber() const
   {
     return m_err;
-  } 
-  
+  }
+
   /// Returns the exception source.
   /**
    * \return source
@@ -213,7 +213,7 @@ protected:
 /**
  * It holds all information about inotify event and provides
  * access to its particular values.
- * 
+ *
  * This class is not (and is not intended to be) thread-safe
  * and therefore it must not be used concurrently in multiple
  * threads.
@@ -231,12 +231,12 @@ public:
   {
     m_pWatch = NULL;
   }
-  
+
   /// Constructor.
   /**
    * Creates an event based on inotify event data.
    * For NULL pointers it works the same way as InotifyEvent().
-   * 
+   *
    * \param[in] pEvt event data
    * \param[in] pWatch inotify watch
    */
@@ -258,29 +258,29 @@ public:
       m_pWatch = NULL;
     }
   }
-  
+
   /// Destructor.
   ~InotifyEvent() {}
-  
+
   /// Returns the event watch descriptor.
   /**
    * \return watch descriptor
-   * 
+   *
    * \sa InotifyWatch::GetDescriptor()
    */
   int32_t GetDescriptor() const;
-  
+
   /// Returns the event mask.
   /**
    * \return event mask
-   * 
+   *
    * \sa InotifyWatch::GetMask()
    */
   inline uint32_t GetMask() const
   {
     return m_uMask;
   }
-  
+
   /// Checks a value for the event type.
   /**
    * \param[in] uValue checked value
@@ -291,7 +291,7 @@ public:
   {
     return ((uValue & uType) != 0) && ((~uValue & uType) == 0);
   }
-  
+
   /// Checks for the event type.
   /**
    * \param[in] uType type which is checked for
@@ -301,7 +301,7 @@ public:
   {
     return IsType(m_uMask, uType);
   }
-  
+
   /// Returns the event cookie.
   /**
    * \return event cookie
@@ -310,7 +310,7 @@ public:
   {
     return m_uCookie;
   }
-  
+
   /// Returns the event name length.
   /**
    * \return event name length
@@ -319,7 +319,7 @@ public:
   {
     return (uint32_t) m_name.length();
   }
-  
+
   /// Returns the event name.
   /**
    * \return event name
@@ -328,7 +328,7 @@ public:
   {
     return m_name;
   }
-  
+
   /// Extracts the event name.
   /**
    * \param[out] rName event name
@@ -337,7 +337,7 @@ public:
   {
     rName = GetName();
   }
-  
+
   /// Returns the source watch.
   /**
    * \return source watch
@@ -346,27 +346,27 @@ public:
   {
     return m_pWatch;
   }
-  
+
   /// Finds the appropriate mask for a name.
   /**
    * \param[in] rName mask name
    * \return mask for name; 0 on failure
    */
   static uint32_t GetMaskByName(const std::string& rName);
-  
+
   /// Fills the string with all types contained in an event mask value.
   /**
    * \param[in] uValue event mask value
    * \param[out] rStr dumped event types
    */
   static void DumpTypes(uint32_t uValue, std::string& rStr);
-  
+
   /// Fills the string with all types contained in the event mask.
   /**
    * \param[out] rStr dumped event types
    */
   void DumpTypes(std::string& rStr) const;
-  
+
 private:
   uint32_t m_uMask;           ///< mask
   uint32_t m_uCookie;         ///< cookie
@@ -380,7 +380,7 @@ private:
 /**
  * It holds information about the inotify watch on a particular
  * inode.
- * 
+ *
  * If the INOTIFY_THREAD_SAFE is defined this class is thread-safe.
  */
 class InotifyWatch
@@ -390,7 +390,7 @@ public:
   /**
    * Creates an inotify watch. Because this watch is
    * inactive it has an invalid descriptor (-1).
-   * 
+   *
    * \param[in] rPath watched file path
    * \param[in] uMask mask for events
    * \param[in] fEnabled events enabled yes/no
@@ -403,13 +403,13 @@ public:
   {
     IN_LOCK_INIT
   }
-  
+
   /// Destructor.
   ~InotifyWatch()
   {
     IN_LOCK_DONE
   }
-  
+
   /// Returns the watch descriptor.
   /**
    * \return watch descriptor; -1 for inactive watch
@@ -418,7 +418,7 @@ public:
   {
     return m_wd;
   }
-  
+
   /// Returns the watched file path.
   /**
    * \return file path
@@ -427,7 +427,7 @@ public:
   {
     return m_path;
   }
-  
+
   /// Returns the watch event mask.
   /**
    * \return event mask
@@ -436,19 +436,19 @@ public:
   {
     return (uint32_t) m_uMask;
   }
-  
+
   /// Sets the watch event mask.
   /**
    * If the watch is active (added to an instance of Inotify)
    * this method may fail due to unsuccessful re-setting
    * the watch in the kernel.
-   * 
+   *
    * \param[in] uMask event mask
-   * 
+   *
    * \throw InotifyException thrown if changing fails
    */
-  void SetMask(uint32_t uMask) throw (InotifyException);   
-  
+  void SetMask(uint32_t uMask) throw (InotifyException);
+
   /// Returns the appropriate inotify class instance.
   /**
    * \return inotify instance
@@ -457,21 +457,21 @@ public:
   {
     return m_pInotify;
   }
-  
+
   /// Enables/disables the watch.
   /**
    * If the watch is active (added to an instance of Inotify)
    * this method may fail due to unsuccessful re-setting
    * the watch in the kernel.
-   * 
+   *
    * Re-setting the current state has no effect.
-   * 
+   *
    * \param[in] fEnabled set enabled yes/no
-   * 
+   *
    * \throw InotifyException thrown if enabling/disabling fails
    */
   void SetEnabled(bool fEnabled) throw (InotifyException);
-  
+
   /// Checks whether the watch is enabled.
   /**
    * \return true = enables, false = disabled
@@ -480,7 +480,7 @@ public:
   {
     return m_fEnabled;
   }
-  
+
 private:
   friend class Inotify;
 
@@ -489,14 +489,14 @@ private:
   int32_t m_wd;         ///< watch descriptor
   Inotify* m_pInotify;  ///< inotify object
   bool m_fEnabled;      ///< events enabled yes/no
-  
+
   IN_LOCK_DECL
-  
+
   /// Disables the watch (due to removing by the kernel).
   /**
    * This method must be called after receiving an event.
    * It ensures the watch object is consistent with the kernel
-   * data. 
+   * data.
    */
   void __Disable();
 };
@@ -513,7 +513,7 @@ typedef std::map<std::string, InotifyWatch*> IN_WP_MAP;
 /**
  * It holds information about the inotify device descriptor
  * and manages the event queue.
- * 
+ *
  * If the INOTIFY_THREAD_SAFE is defined this class is thread-safe.
  */
 class Inotify
@@ -523,72 +523,72 @@ public:
   /**
    * Creates and initializes an instance of inotify communication
    * object (opens the inotify device).
-   * 
+   *
    * \throw InotifyException thrown if inotify isn't available
    */
   Inotify() throw (InotifyException);
-  
+
   /// Destructor.
   /**
    * Calls Close() due to clean-up.
    */
   ~Inotify();
-  
+
   /// Removes all watches and closes the inotify device.
   void Close();
-    
+
   /// Adds a new watch.
   /**
    * \param[in] pWatch inotify watch
-   * 
+   *
    * \throw InotifyException thrown if adding failed
    */
   void Add(InotifyWatch* pWatch) throw (InotifyException);
-  
+
   /// Adds a new watch.
   /**
    * \param[in] rWatch inotify watch
-   * 
+   *
    * \throw InotifyException thrown if adding failed
    */
   inline void Add(InotifyWatch& rWatch) throw (InotifyException)
   {
     Add(&rWatch);
   }
-  
+
   /// Removes a watch.
   /**
    * If the given watch is not present it does nothing.
-   * 
+   *
    * \param[in] pWatch inotify watch
-   * 
+   *
    * \throw InotifyException thrown if removing failed
    */
   void Remove(InotifyWatch* pWatch) throw (InotifyException);
-  
+
   /// Removes a watch.
   /**
    * If the given watch is not present it does nothing.
-   * 
+   *
    * \param[in] rWatch inotify watch
-   * 
+   *
    * \throw InotifyException thrown if removing failed
    */
   inline void Remove(InotifyWatch& rWatch) throw (InotifyException)
   {
     Remove(&rWatch);
   }
-  
+
   /// Removes all watches.
   void RemoveAll();
-  
+
   /// Returns the count of watches.
   /**
    * This is the total count of all watches (regardless whether
    * enabled or not).
-   * 
+   *
    * \return count of watches
-   * 
+   *
    * \sa GetEnabledCount()
    */
   inline size_t GetWatchCount() const
@@ -598,13 +598,13 @@ public:
     IN_READ_END
     return n;
   }
-  
+
   /// Returns the count of enabled watches.
   /**
    * \return count of enabled watches
-   * 
+   *
    * \sa GetWatchCount()
-   */  
+   */
   inline size_t GetEnabledCount() const
   {
     IN_READ_BEGIN
@@ -612,26 +612,26 @@ public:
     IN_READ_END
     return n;
   }
-  
+
   /// Waits for inotify events.
   /**
    * It waits until one or more events occur. When called
    * in nonblocking mode it only retrieves occurred events
    * to the internal queue and exits.
-   * 
+   *
    * \param[in] fNoIntr if true it re-calls the system call after a handled signal
-   * 
+   *
    * \throw InotifyException thrown if reading events failed
-   * 
+   *
    * \sa SetNonBlock()
    */
   void WaitForEvents(bool fNoIntr = false) throw (InotifyException);
-  
+
   /// Returns the count of received and queued events.
   /**
    * This number is related to the events in the queue inside
    * this object, not to the events pending in the kernel.
-   * 
+   *
    * \return count of events
    */
   inline size_t GetEventCount()
@@ -641,123 +641,123 @@ public:
     IN_READ_END
     return n;
   }
-  
+
   /// Extracts a queued inotify event.
   /**
    * The extracted event is removed from the queue.
    * If the pointer is NULL it does nothing.
-   * 
+   *
    * \param[in,out] pEvt event object
-   * 
+   *
    * \throw InotifyException thrown if the provided pointer is NULL
    */
   bool GetEvent(InotifyEvent* pEvt) throw (InotifyException);
-  
+
   /// Extracts a queued inotify event.
   /**
    * The extracted event is removed from the queue.
-   * 
+   *
    * \param[in,out] rEvt event object
-   * 
+   *
    * \throw InotifyException thrown only in very anomalous cases
    */
   bool GetEvent(InotifyEvent& rEvt) throw (InotifyException)
   {
     return GetEvent(&rEvt);
   }
-  
+
   /// Extracts a queued inotify event (without removing).
   /**
    * The extracted event stays in the queue.
    * If the pointer is NULL it does nothing.
-   * 
+   *
    * \param[in,out] pEvt event object
-   * 
+   *
    * \throw InotifyException thrown if the provided pointer is NULL
    */
   bool PeekEvent(InotifyEvent* pEvt) throw (InotifyException);
-  
+
   /// Extracts a queued inotify event (without removing).
   /**
    * The extracted event stays in the queue.
-   * 
+   *
    * \param[in,out] rEvt event object
-   * 
+   *
    * \throw InotifyException thrown only in very anomalous cases
    */
   bool PeekEvent(InotifyEvent& rEvt) throw (InotifyException)
   {
     return PeekEvent(&rEvt);
   }
-  
+
   /// Searches for a watch by a watch descriptor.
   /**
    * It tries to find a watch by the given descriptor.
-   * 
+   *
    * \param[in] iDescriptor watch descriptor
    * \return pointer to a watch; NULL if no such watch exists
    */
   InotifyWatch* FindWatch(int iDescriptor);
-  
+
   /// Searches for a watch by a filesystem path.
   /**
    * It tries to find a watch by the given filesystem path.
-   * 
+   *
    * \param[in] rPath filesystem path
    * \return pointer to a watch; NULL if no such watch exists
-   * 
+   *
    * \attention The path must be exactly identical to the one
    *            used for the searched watch. Be careful about
    *            absolute/relative and case-insensitive paths.
    */
    InotifyWatch* FindWatch(const std::string& rPath);
-  
+
   /// Returns the file descriptor.
   /**
    * The descriptor can be used in standard low-level file
    * functions (poll(), select(), fcntl() etc.).
-   * 
+   *
    * \return valid file descriptor or -1 for inactive object
-   * 
+   *
    * \sa SetNonBlock()
    */
   inline int GetDescriptor() const
   {
     return m_fd;
   }
-  
+
   /// Enables/disables non-blocking mode.
   /**
    * Use this mode if you want to monitor the descriptor
    * (acquired thru GetDescriptor()) in functions such as
    * poll(), select() etc.
-   * 
+   *
    * Non-blocking mode is disabled by default.
-   * 
+   *
    * \param[in] fNonBlock enable/disable non-blocking mode
-   * 
+   *
    * \throw InotifyException thrown if setting mode failed
-   * 
+   *
    * \sa GetDescriptor(), SetCloseOnExec()
    */
   void SetNonBlock(bool fNonBlock) throw (InotifyException);
-  
+
   /// Enables/disables closing on exec.
   /**
    * Enable this if you want to close the descriptor when
    * executing another program. Otherwise, the descriptor
    * will be inherited.
-   * 
+   *
    * Closing on exec is disabled by default.
-   * 
+   *
    * \param[in] fClOnEx enable/disable closing on exec
-   * 
+   *
    * \throw InotifyException thrown if setting failed
-   * 
+   *
    * \sa GetDescriptor(), SetNonBlock()
    */
   void SetCloseOnExec(bool fClOnEx) throw (InotifyException);
-  
+
   /// Acquires a particular inotify capability/limit.
   /**
    * \param[in] cap capability/limit identifier
@@ -765,7 +765,7 @@ public:
    * \throw InotifyException thrown if the given value cannot be acquired
    */
   static uint32_t GetCapability(InotifyCapability_t cap) throw (InotifyException);
-  
+
   /// Modifies a particular inotify capability/limit.
   /**
    * \param[in] cap capability/limit identifier
@@ -776,7 +776,7 @@ public:
    *            affect system performance and/or stability.
    */
   static void SetCapability(InotifyCapability_t cap, uint32_t val) throw (InotifyException);
-  
+
   /// Returns the maximum number of events in the kernel queue.
   /**
    * \return maximum number of events in the kernel queue
@@ -786,7 +786,7 @@ public:
   {
     return GetCapability(IN_MAX_EVENTS);
   }
-  
+
   /// Sets the maximum number of events in the kernel queue.
   /**
    * \param[in] val new value
@@ -800,12 +800,12 @@ public:
   {
     SetCapability(IN_MAX_EVENTS, val);
   }
-  
+
   /// Returns the maximum number of inotify instances per process.
   /**
    * It means the maximum number of open inotify file descriptors
    * per running process.
-   * 
+   *
    * \return maximum number of inotify instances
    * \throw InotifyException thrown if the given value cannot be acquired
    */
@@ -813,7 +813,7 @@ public:
   {
     return GetCapability(IN_MAX_INSTANCES);
   }
-  
+
   /// Sets the maximum number of inotify instances per process.
   /**
    * \param[in] val new value
@@ -827,12 +827,12 @@ public:
   {
     SetCapability(IN_MAX_INSTANCES, val);
   }
-  
+
   /// Returns the maximum number of inotify watches per instance.
   /**
    * It means the maximum number of inotify watches per inotify
    * file descriptor.
-   * 
+   *
    * \return maximum number of inotify watches
    * \throw InotifyException thrown if the given value cannot be acquired
    */
@@ -840,7 +840,7 @@ public:
   {
     return GetCapability(IN_MAX_WATCHES);
   }
-  
+
   /// Sets the maximum number of inotify watches per instance.
   /**
    * \param[in] val new value
@@ -855,17 +855,17 @@ public:
     SetCapability(IN_MAX_WATCHES, val);
   }
 
-private: 
+private:
   int m_fd;                             ///< file descriptor
   IN_WATCH_MAP m_watches;               ///< watches (by descriptors)
   IN_WP_MAP m_paths;                    ///< watches (by paths)
   unsigned char m_buf[INOTIFY_BUFLEN];  ///< buffer for events
   std::deque<InotifyEvent> m_events;    ///< event queue
-  
+
   IN_LOCK_DECL
-  
+
   friend class InotifyWatch;
-  
+
   static std::string GetCapabilityPath(InotifyCapability_t cap) throw (InotifyException);
 };
 

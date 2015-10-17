@@ -2,15 +2,15 @@
 /// inotify cron daemon user tables header
 /**
  * \file usertable.h
- * 
+ *
  * inotify cron system
- * 
+ *
  * Copyright (C) 2006, 2007, 2008 Lukas Jelinek, <lukas@aiken.cz>
- * 
+ *
  * This program is free software; you can use it, redistribute
  * it and/or modify it under the terms of the GNU General Public
  * License, version 2 (see LICENSE-GPL).
- *  
+ *
  */
 
 #ifndef _USERTABLE_H_
@@ -68,7 +68,7 @@ public:
    * \param[in] pUser watch for user tables
    */
   EventDispatcher(int iPipeFd, Inotify* pIn, InotifyWatch* pSys, InotifyWatch* pUser);
-  
+
   /// Destructor.
   ~EventDispatcher();
 
@@ -77,19 +77,19 @@ public:
    * \return pipe event occurred yes/no
    */
   bool ProcessEvents();
-  
+
   /// Registers an user table.
   /**
    * \param[in] pTab user table
    */
   void Register(UserTable* pTab);
-  
+
   /// Unregisters an user table.
   /**
    * \param[in] pTab user table
    */
   void Unregister(UserTable* pTab);
-  
+
   /// Returns the poll data size.
   /**
    * \return poll data size
@@ -98,7 +98,7 @@ public:
   {
     return m_size;
   }
-  
+
   /// Returns the poll data.
   /**
    * \return poll data
@@ -107,10 +107,10 @@ public:
   {
     return m_pPoll;
   }
-  
+
   /// Rebuilds the poll array data.
   void Rebuild();
-  
+
   /// Removes all registered user tables.
   /**
    * It doesn't cause poll data rebuilding.
@@ -119,18 +119,18 @@ public:
   {
     m_maps.clear();
   }
-  
+
 private:
   int m_iPipeFd;    ///< pipe file descriptor
   int m_iMgmtFd;    ///< table management file descriptor
-  Inotify* m_pIn;   ///< table management inotify object 
+  Inotify* m_pIn;   ///< table management inotify object
   InotifyWatch* m_pSys;   ///< watch for system tables
-  InotifyWatch* m_pUser;  ///< watch for user tables 
+  InotifyWatch* m_pUser;  ///< watch for user tables
   FDUT_MAP m_maps;  ///< watch-to-usertable mapping
   size_t m_size;    ///< poll data size
   struct pollfd* m_pPoll; ///< poll data array
-  
-  /// Processes events on the table management inotify object. 
+
+  /// Processes events on the table management inotify object.
   void ProcessMgmtEvents();
 };
 
@@ -151,10 +151,10 @@ public:
    * \param[in] fSysTable system table yes/no
    */
   UserTable(EventDispatcher* pEd, const std::string& rUser, bool fSysTable);
-  
+
   /// Destructor.
   virtual ~UserTable();
-  
+
   /// Loads the table.
   /**
    * All loaded entries have their inotify watches and are
@@ -162,20 +162,20 @@ public:
    * If loading fails the table remains empty.
    */
   void Load();
-  
+
   /// Removes all entries from the table.
   /**
    * All entries are unregistered from the event dispatcher and
    * their watches are destroyed.
    */
   void Dispose();
-  
+
   /// Processes an inotify event.
   /**
    * \param[in] rEvt inotify event
    */
   void OnEvent(InotifyEvent& rEvt);
-  
+
   /// Cleans-up all zombie child processes and enables disabled watches.
   /**
    * \attention This method must be called AFTER processing all events
@@ -193,23 +193,23 @@ public:
    * \param[in] pid pid of process to clear
    */
   static void ClearProcess(pid_t pid);
-  
+
   /// Checks whether the user may access a file.
   /**
    * Any access right (RWX) is sufficient.
-   * 
+   *
    * \param[in] rPath absolute file path
-   * \param[in] fNoFollow don't follow a symbolic link 
+   * \param[in] fNoFollow don't follow a symbolic link
    * \return true = access granted, false = otherwise
    */
   bool MayAccess(const std::string& rPath, bool fNoFollow) const;
-  
+
   /// Checks whether it is a system table.
   /**
    * \return true = system table, false = user table
    */
   bool IsSystem() const;
-  
+
   /// Returns the related inotify object.
   /**
    * \return related inotify object
@@ -218,16 +218,16 @@ public:
   {
     return &m_in;
   }
-  
+
   /// Checks whether an user exists and has permission to use incron.
   /**
    * It searches for the given user name in the user database.
    * If it failes it returns 'false'. Otherwise it checks
    * permission files for this user (see InCronTab::CheckUser()).
-   * 
+   *
    * \param[in] user user name
    * \return true = user has permission to use incron, false = otherwise
-   * 
+   *
    * \sa InCronTab::CheckUser()
    */
   inline static bool CheckUser(const char* user)
@@ -235,10 +235,10 @@ public:
     struct passwd* pw = getpwnam(user);
     if (pw == NULL)
       return false;
-      
+
     return IncronTab::CheckUser(user);
   }
-  
+
   /// Runs a program as the table's user.
   /**
    * \attention Don't call from the main process (before forking)!
@@ -260,7 +260,7 @@ public:
   static void EnableRecursive() {
     m_recursive = true;
   }
-  
+
 private:
   Inotify m_in;             ///< inotify object
   EventDispatcher* m_pEd;   ///< event dispatcher
@@ -272,14 +272,14 @@ private:
   static bool m_recursive;  ///< max forks we can spawn
 
   static PROC_MAP s_procMap;  ///< child process mapping
-  
+
   /// Finds an entry for a watch.
   /**
    * \param[in] pWatch inotify watch
    * \return pointer to the appropriate entry; NULL if no such entry exists
    */
   IncronTabEntry* FindEntry(InotifyWatch* pWatch);
-  
+
   /// Prepares arguments for creating a child process.
   /**
    * \param[in] rCmd command string
@@ -288,7 +288,7 @@ private:
    * \return true = success, false = failure
    */
   bool PrepareArgs(const std::string& rCmd, int& argc, char**& argv);
-  
+
   /// Frees memory allocated for arguments.
   /**
    * \param[in] argc argument count

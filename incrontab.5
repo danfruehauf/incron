@@ -21,27 +21,27 @@ Please remember that the same path may occur only once per table (otherwise only
 These basic event mask symbols are defined:
 
 \fBIN_ACCESS\fR 		File was accessed (read) (*)
-.br 
+.br
 \fBIN_ATTRIB\fR 		Metadata changed (permissions, timestamps, extended attributes, etc.) (*)
-.br 
+.br
 \fBIN_CLOSE_WRITE\fR 	File opened for writing was closed (*)
-.br 
+.br
 \fBIN_CLOSE_NOWRITE\fR 	File not opened for writing was closed (*)
-.br 
+.br
 \fBIN_CREATE\fR 		File/directory created in watched directory (*)
-.br 
+.br
 \fBIN_DELETE\fR 		File/directory deleted from watched directory (*)
-.br 
+.br
 \fBIN_DELETE_SELF\fR 		Watched file/directory was itself deleted
-.br 
+.br
 \fBIN_MODIFY\fR 		File was modified (*)
-.br 
+.br
 \fBIN_MOVE_SELF\fR 		Watched file/directory was itself moved
-.br 
+.br
 \fBIN_MOVED_FROM\fR 		File moved out of watched directory (*)
-.br 
+.br
 \fBIN_MOVED_TO\fR 		File moved into watched directory (*)
-.br 
+.br
 \fBIN_OPEN\fR 			File was opened (*)
 
 When monitoring a directory, the events marked with an asterisk (*) above can occur for files in the directory, in which case the name field in the returned event data identifies the name of the file within the directory.
@@ -49,11 +49,11 @@ When monitoring a directory, the events marked with an asterisk (*) above can oc
 The \fBIN_ALL_EVENTS\fR symbol is defined as a bit mask of all of the above events. Two additional convenience symbols are \fBIN_MOVE\fR, which is a combination of \fBIN_MOVED_FROM\fR and \fBIN_MOVED_TO\fR, and \fBIN_CLOSE\fR which combines \fBIN_CLOSE_WRITE\fR and \fBIN_CLOSE_NOWRITE\fR.
 
 The following further symbols can be specified in the mask:
- 
+
 \fBIN_DONT_FOLLOW\fR 	Don't dereference pathname if it is a symbolic link
-.br 
+.br
 \fBIN_ONESHOT\fR 		Monitor pathname for only one event
-.br 
+.br
 \fBIN_ONLYDIR\fR 		Only watch pathname if it is a directory
 
 Additionally, there is a symbol which doesn't appear in the inotify symbol set. It it \fBIN_NO_LOOP\fR. This symbol disables monitoring events until the current one is completely handled (until its child process exits).

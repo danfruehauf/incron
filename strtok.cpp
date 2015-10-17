@@ -2,11 +2,11 @@
 /// string tokenizer implementation
 /**
  * \file strtok.cpp
- * 
+ *
  * string tokenizer
- * 
+ *
  * Copyright (C) 2006, 2007, 2008 Lukas Jelinek, <lukas@aiken.cz>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of one of the following licenses:
  *
@@ -16,7 +16,7 @@
  *
  * If you want to help with choosing the best license for you,
  * please visit http://www.gnu.org/licenses/license-list.html.
- * 
+ *
  */
 
 
@@ -32,26 +32,26 @@ StringTokenizer::StringTokenizer(const std::string& rStr, char cDelim, char cPre
   m_pos = 0;
   m_len = rStr.length();
 }
-    
+
 std::string StringTokenizer::GetNextToken(bool fSkipEmpty)
 {
   std::string s;
-  
+
   do {
     _GetNextToken(s, true);
   } while (fSkipEmpty && s.empty() && m_pos < m_len);
-  
+
   return s;
 }
 
 std::string StringTokenizer::GetNextTokenRaw(bool fSkipEmpty)
 {
   std::string s;
-  
+
   do {
     _GetNextToken(s, false);
   } while (fSkipEmpty && s.empty() && m_pos < m_len);
-  
+
   return s;
 }
 
@@ -76,10 +76,10 @@ std::string StringTokenizer::StripPrefix(const char* s, SIZE cnt)
     else {
       stream << s[pos];
     }
-    
+
     pos++;
   }
-  
+
   return stream.str();
 }
 
@@ -103,13 +103,13 @@ void StringTokenizer::_GetNextTokenNoPrefix(std::string& rToken)
       rToken = m_str.substr(m_pos, i - m_pos);
       m_pos = i + 1;
       return;
-    }    
+    }
   }
-  
+
   rToken = m_str.substr(m_pos);
   m_pos = m_len;
 }
-  
+
 void StringTokenizer::_GetNextTokenWithPrefix(std::string& rToken)
 {
   int pref = 0;
@@ -135,7 +135,7 @@ void StringTokenizer::_GetNextTokenWithPrefix(std::string& rToken)
       pref = 0;
     }
   }
-  
+
   rToken = m_str.substr(m_pos);
   m_pos = m_len;
 }
