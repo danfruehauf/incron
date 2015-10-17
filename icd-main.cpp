@@ -2,18 +2,18 @@
 /// inotify cron daemon main file
 /**
  * \file icd-main.cpp
- * 
+ *
  * inotify cron system
- * 
+ *
  * Copyright (C) 2006, 2007, 2008, 2012 Lukas Jelinek, <lukas@aiken.cz>
- * 
+ *
  * This program is free software; you can use it, redistribute
  * it and/or modify it under the terms of the GNU General Public
  * License, version 2 (see LICENSE-GPL).
- *  
+ *
  * Credits:
  *   Christian Ruppert (new include to build with GCC 4.4+)
- * 
+ *
  */
 
 #include <map>
@@ -93,7 +93,7 @@ bool g_daemon = true;
  * For SIGCHLD it writes a character into the notification pipe
  * (this is a workaround made due to disability to reliably
  * wait for dead children).
- * 
+ *
  * \param[in] signo signal number
  */
 void on_signal(int signo)
@@ -106,7 +106,7 @@ void on_signal(int signo)
     case SIGCHLD:
       // first empty pipe (to prevent internal buffer overflow)
       do {} while (read(g_cldPipe[0], g_cldPipeBuf, CHILD_PIPE_BUF_LEN) > 0);
-      
+
       // now write one character
       if (write(g_cldPipe[1], "X", 1) <= 0) {
         syslog(LOG_WARNING, "cannot send SIGCHLD token to notification pipe");
@@ -122,35 +122,35 @@ void on_signal(int signo)
 /// Attempts to load all (user and system) incron tables.
 /**
  * Loaded tables are registered for processing events.
- * 
+ *
  * \param[in] pEd inotify event dispatcher
- * 
+ *
  * \throw InotifyException thrown if base table directory cannot be read
  */
 void load_tables(EventDispatcher* pEd) throw (InotifyException)
 {
   // WARNING - this function has not been optimized!!!
-  
+
   std::string s;
   if (!IncronCfg::GetValue("system_table_dir", s))
     throw InotifyException("configuration system is corrupted", EINVAL);
-  
+
   DIR* d = opendir(s.c_str());
   if (d != NULL) {
     syslog(LOG_NOTICE, "loading system tables");
-      
+
     struct dirent* pDe = NULL;
     while ((pDe = readdir(d)) != NULL) {
       std::string un(pDe->d_name);
-      std::string path(IncronCfg::BuildPath(s, pDe->d_name)); 
-      
+      std::string path(IncronCfg::BuildPath(s, pDe->d_name));
+
       bool ok = pDe->d_type == DT_REG;
       if (pDe->d_type == DT_UNKNOWN) {
         struct stat st;
         if (stat(path.c_str(), &st) == 0)
           ok = S_ISREG(st.st_mode);
       }
-      
+
       if (ok) {
         syslog(LOG_INFO, "loading table %s", pDe->d_name);
         UserTable* pUt = new UserTable(pEd, un, true);
@@ -158,34 +158,34 @@ void load_tables(EventDispatcher* pEd) throw (InotifyException)
         pUt->Load();
       }
     }
-    
+
     closedir(d);
   }
   else {
     syslog(LOG_WARNING, "cannot open system table directory (ignoring)");
   }
-  
+
   if (!IncronCfg::GetValue("user_table_dir", s))
     throw InotifyException("configuration system is corrupted", EINVAL);
-    
+
   d = opendir(s.c_str());
   if (d == NULL)
     throw InotifyException("cannot open user table directory", errno);
-  
+
   syslog(LOG_NOTICE, "loading user tables");
-    
+
   struct dirent* pDe = NULL;
   while ((pDe = readdir(d)) != NULL) {
     std::string un(pDe->d_name);
     std::string path(IncronCfg::BuildPath(s, pDe->d_name));
-    
+
     bool ok = pDe->d_type == DT_REG;
     if (pDe->d_type == DT_UNKNOWN) {
       struct stat st;
       if (stat(path.c_str(), &st) == 0)
         ok = S_ISREG(st.st_mode);
     }
-    
+
     if (ok) {
       if (UserTable::CheckUser(pDe->d_name)) {
         syslog(LOG_INFO, "loading table for user %s", pDe->d_name);
@@ -198,25 +198,25 @@ void load_tables(EventDispatcher* pEd) throw (InotifyException)
       }
     }
   }
-  
+
   closedir(d);
 }
 
 /// Deallocates all memory used by incron tables and unregisters them from the dispatcher.
 /**
- * \param[in] pEd event dispatcher 
+ * \param[in] pEd event dispatcher
  */
 void free_tables(EventDispatcher* pEd)
 {
   pEd->Clear();
-  
+
   SUT_MAP::iterator it = g_ut.begin();
   while (it != g_ut.end()) {
     UserTable* pUt = (*it).second;
     delete pUt;
     it++;
   }
-  
+
   g_ut.clear();
 }
 
@@ -229,26 +229,26 @@ void prepare_pipe()
 {
   g_cldPipe[0] = -1;
   g_cldPipe[1] = -1;
-  
+
   if (pipe(g_cldPipe) != 0)
       throw InotifyException("cannot create notification pipe", errno, NULL);
-  
+
   for (int i=0; i<2; i++) {
     int res = fcntl(g_cldPipe[i], F_GETFL);
     if (res == -1)
       throw InotifyException("cannot get pipe flags", errno, NULL);
-    
+
     res |= O_NONBLOCK;
-        
+
     if (fcntl(g_cldPipe[i], F_SETFL, res) == -1)
       throw InotifyException("cannot set pipe flags", errno, NULL);
-      
+
     res = fcntl(g_cldPipe[i], F_GETFD);
     if (res == -1)
       throw InotifyException("cannot get pipe flags", errno, NULL);
-    
+
     res |= FD_CLOEXEC;
-        
+
     if (fcntl(g_cldPipe[i], F_SETFD, res) == -1)
       throw InotifyException("cannot set pipe flags", errno, NULL);
   }
@@ -258,12 +258,12 @@ void prepare_pipe()
 /**
  * The string is accepted if it equals either the short or long
  * form of the command.
- * 
+ *
  * \param[in] s checked string
  * \param[in] shortCmd short form of command
  * \param[in] longCmd long form of command
  * \return true = string accepted, false = otherwise
- */  
+ */
  /*
 bool check_parameter(const char* s, const char* shortCmd, const char* longCmd)
 {
@@ -274,7 +274,7 @@ bool check_parameter(const char* s, const char* shortCmd, const char* longCmd)
 
 /// Initializes a poll array.
 /**
- * \param[out] pfd poll structure array 
+ * \param[out] pfd poll structure array
  * \param[in] pipefd pipe file descriptor
  * \param[in] infd inotify infrastructure file descriptor
  */
@@ -294,7 +294,7 @@ void init_poll_array(struct pollfd pfd[], int pipefd, int infd)
  * \param[in] argc argument count
  * \param[in] argv argument array
  * \return 0 on success, 1 on error
- * 
+ *
  * \attention In daemon mode, it finishes immediately.
  */
 int main(int argc, char** argv)
@@ -311,67 +311,67 @@ int main(int argc, char** argv)
     fprintf(stderr, "error while initializing application");
     return 1;
   }
-  
+
   AppArgs::Parse(argc, argv);
-  
+
   if (AppArgs::ExistsOption("help")) {
     fprintf(stderr, "%s\n", INCROND_HELP);
     return 0;
   }
-  
+
   if (AppArgs::ExistsOption("about")) {
     fprintf(stderr, "%s\n", INCROND_DESCRIPTION);
     return 0;
   }
-  
+
   if (AppArgs::ExistsOption("version")) {
     fprintf(stderr, "%s\n", INCROND_VERSION);
     return 0;
   }
-  
+
   IncronCfg::Init();
-  
+
   std::string cfg;
   if (!AppArgs::GetOption("config", cfg))
     cfg = INCRON_CONFIG;
   IncronCfg::Load(cfg);
-  
+
   std::string lckdir;
   IncronCfg::GetValue("lockfile_dir", lckdir);
   std::string lckfile;
   IncronCfg::GetValue("lockfile_name", lckfile);
   AppInstance app(lckfile, lckdir);
-  
+
   if (AppArgs::ExistsOption("kill")) {
     fprintf(stderr, "attempting to terminate a running instance of incrond...\n");
     if (app.Terminate()) {
       fprintf(stderr, "the instance notified, going down\n");
       return 0;
     }
-    else { 
+    else {
       fprintf(stderr, "error - incrond probably not running\n");
       return 1;
     }
   }
-  
+
   if (AppArgs::ExistsOption("foreground"))
     g_daemon = false;
-  
-  
+
+
   openlog(INCROND_NAME, INCRON_LOG_OPTS, INCRON_LOG_FACIL);
-  
+
   syslog(LOG_NOTICE, "starting service (version %s, built on %s %s)", INCRON_VERSION, __DATE__, __TIME__);
-  
+
   AppArgs::Destroy();
-  
+
   int ret = 0;
-  
+
   std::string sysBase;
   std::string userBase;
-  
+
   if (!IncronCfg::GetValue("system_table_dir", sysBase))
     throw InotifyException("configuration is corrupted", EINVAL);
-  
+
   if (access(sysBase.c_str(), R_OK) != 0) {
     syslog(LOG_CRIT, "cannot read directory for system tables (%s): (%i) %s", sysBase.c_str(), errno, strerror(errno));
     if (!g_daemon)
@@ -379,10 +379,10 @@ int main(int argc, char** argv)
     ret = 1;
     goto error;
   }
-  
+
   if (!IncronCfg::GetValue("user_table_dir", userBase))
     throw InotifyException("configuration is corrupted", EINVAL);
-  
+
   if (access(userBase.c_str(), R_OK) != 0) {
     syslog(LOG_CRIT, "cannot read directory for user tables (%s): (%i) %s", userBase.c_str(), errno, strerror(errno));
     if (!g_daemon)
@@ -390,7 +390,7 @@ int main(int argc, char** argv)
     ret = 1;
     goto error;
   }
-  
+
   try {
     if (g_daemon)
       if (daemon(0, 0) == -1) {
@@ -399,7 +399,7 @@ int main(int argc, char** argv)
         ret = 1;
         goto error;
       }
-  
+
     try {
     if (!app.Lock()) {
       syslog(LOG_CRIT, "another instance of incrond already running");
@@ -415,21 +415,21 @@ int main(int argc, char** argv)
       ret = 1;
       goto error;
     }
-    
+
     prepare_pipe();
-    
+
     Inotify in;
     in.SetNonBlock(true);
     in.SetCloseOnExec(true);
-    
+
     uint32_t wm = IN_CREATE | IN_CLOSE_WRITE | IN_DELETE | IN_MOVE | IN_DELETE_SELF | IN_UNMOUNT;
     InotifyWatch stw(sysBase, wm);
     in.Add(stw);
     InotifyWatch utw(userBase, wm);
     in.Add(utw);
-    
+
     EventDispatcher ed(g_cldPipe[0], &in, &stw, &utw);
-    
+
     try {
       load_tables(&ed);
     } catch (InotifyException e) {
@@ -438,19 +438,19 @@ int main(int argc, char** argv)
       ret = 1;
       goto error;
     }
-    
-    ed.Rebuild(); // not too efficient, but simple 
-    
+
+    ed.Rebuild(); // not too efficient, but simple
+
     signal(SIGTERM, on_signal);
     signal(SIGINT, on_signal);
     signal(SIGCHLD, on_signal);
-    
+
     syslog(LOG_NOTICE, "ready to process filesystem events");
-    
+
     while (!g_fFinish) {
-      
+
       int res = poll(ed.GetPollData(), ed.GetSize(), -1);
-      
+
       if (res > 0) {
         if (ed.ProcessEvents())
           UserTable::FinishDone();
@@ -465,13 +465,13 @@ int main(int argc, char** argv)
             break;
           default:
             throw InotifyException("polling failed", errno, NULL);
-        } 
+        }
       }
-      
+
     }
-    
+
     free_tables(&ed);
-    
+
     if (g_cldPipe[0] != -1)
       close(g_cldPipe[0]);
     if (g_cldPipe[1] != -1)
@@ -487,8 +487,8 @@ int main(int argc, char** argv)
 error:
 
   syslog(LOG_NOTICE, "stopping service");
-  
+
   closelog();
-  
+
   return ret;
 }

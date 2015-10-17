@@ -2,18 +2,18 @@
 /// inotify cron configuration implementation
 /**
  * \file incroncfg.cpp
- * 
+ *
  * incron configuration
- * 
+ *
  * Copyright (C) 2007, 2008, 2012 Lukas Jelinek, <lukas@aiken.cz>
- * 
+ *
  * This program is free software; you can use it, redistribute
  * it and/or modify it under the terms of the GNU General Public
  * License, version 2 (see LICENSE-GPL).
- *  
+ *
  * Credits:
  *   Christian Ruppert (new include to build with GCC 4.4+)
- * 
+ *
  */
 
 
@@ -49,7 +49,7 @@ void IncronCfg::Init()
 void IncronCfg::Load(const std::string& rPath)
 {
   char s[1024];
-  
+
   std::ifstream is(rPath.c_str());
   if (is.is_open()) {
     while (!is.eof() && !is.fail()) {
@@ -62,10 +62,10 @@ void IncronCfg::Load(const std::string& rPath)
     is.close();
     return;
   }
-  
+
   if (rPath == INCRON_CFG_DEFAULT)
     return;
-  
+
   is.open(INCRON_CFG_DEFAULT);
   if (is.is_open()) {
     while (!is.eof() && !is.fail()) {
@@ -84,15 +84,15 @@ bool IncronCfg::GetValue(const std::string& rKey, std::string& rVal)
   CFG_ITER it = m_values.find(rKey);
   if (it != m_values.end()) {
     rVal = (*it).second;
-    return true;  
+    return true;
   }
-  
+
   it = m_defaults.find(rKey);
   if (it != m_defaults.end()) {
     rVal = (*it).second;
-    return true;  
+    return true;
   }
-  
+
   return false;
 }
 
@@ -101,9 +101,9 @@ bool IncronCfg::GetValue(const std::string& rKey, int& rVal)
   std::string s;
   if (GetValue(rKey, s)) {
     if (sscanf(s.c_str(), "%i", &rVal) == 1)
-      return true; 
+      return true;
   }
-  
+
   return false;
 }
 
@@ -112,9 +112,9 @@ bool IncronCfg::GetValue(const std::string& rKey, unsigned& rVal)
   std::string s;
   if (GetValue(rKey, s)) {
     if (sscanf(s.c_str(), "%u", &rVal) == 1)
-      return true; 
+      return true;
   }
-  
+
   return false;
 }
 
@@ -126,11 +126,11 @@ bool IncronCfg::GetValue(const std::string& rKey, bool& rVal)
     for (size_t i = 0; i < len; i++) {
       s[i] = (char) tolower(s[i]);
     }
-    
+
     rVal = (s == "1" || s == "true" || s == "yes" || s == "on" || s == "enable" || s == "enabled");
     return true;
   }
-  
+
   return false;
 }
 
@@ -138,38 +138,38 @@ std::string IncronCfg::BuildPath(const std::string& rPath, const std::string& rN
 {
   if (rPath.rfind('/') == rPath.length() - 1)
     return rPath + rName;
-    
+
   return rPath + "/" + rName;
 }
 
 bool IncronCfg::ParseLine(const char* s, std::string& rKey, std::string& rVal)
 {
   // CAUTION: This code hasn't been optimized. It may be slow.
-  
+
   char key[1024], val[1024];
-  
+
   if (IsComment(s))
     return false;
-  
+
   std::istringstream ss(s);
   ss.get(key, 1023, '=');
   if (ss.fail())
     return false;
-    
+
   ss.get(val, 1023);
   if (ss.fail())
     return false;
-    
+
   rKey = key;
   rVal = val;
-    
+
   std::string::size_type a = rKey.find_first_not_of(" \t");
   std::string::size_type b = rKey.find_last_not_of(" \t");
   if (a == std::string::npos || b == std::string::npos)
     return false;
-    
+
   rKey = rKey.substr(a, b-a+1);
-  
+
   a = rVal.find_first_not_of(" \t=");
   b = rVal.find_last_not_of(" \t");
   if (a == std::string::npos || b == std::string::npos) {
@@ -178,22 +178,22 @@ bool IncronCfg::ParseLine(const char* s, std::string& rKey, std::string& rVal)
   else {
     rVal = rVal.substr(a, b-a+1);
   }
-    
+
   return true;
 }
 
 bool IncronCfg::IsComment(const char* s)
 {
-  const char* sx = strchr(s, '#'); // 
+  const char* sx = strchr(s, '#'); //
   if (sx == NULL)
     return false;
-    
+
   size_t len = sx - s;
   for (size_t i = 0; i < len; i++) {
     if (!(s[i] == ' ' || s[i] == '\t'))
       return false;
   }
-  
+
   return true;
 }
 

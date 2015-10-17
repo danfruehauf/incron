@@ -471,20 +471,20 @@ int main(int argc, char** argv)
   struct passwd* ppwd = NULL;
 
   if (chuser) {
-	if ((ppwd = getpwnam(user.c_str())) != NULL) {
+    if ((ppwd = getpwnam(user.c_str())) != NULL) {
       if (    setenv("LOGNAME",   ppwd->pw_name,   1) != 0
-		  ||  setenv("USER",      ppwd->pw_name,   1) != 0
-		  ||  setenv("USERNAME",  ppwd->pw_name,   1) != 0
-		  ||  setenv("HOME",      ppwd->pw_dir,    1) != 0
-		  ||  setenv("SHELL",     ppwd->pw_shell,  1) != 0)
+          ||  setenv("USER",      ppwd->pw_name,   1) != 0
+          ||  setenv("USERNAME",  ppwd->pw_name,   1) != 0
+          ||  setenv("HOME",      ppwd->pw_dir,    1) != 0
+          ||  setenv("SHELL",     ppwd->pw_shell,  1) != 0)
       {
-		perror("cannot set environment variables");
-		return 1;
-	  }
-	} else {
-	  fprintf(stderr, "user '%s' not found\n", user.c_str());
-	  return 1;
-	}
+        perror("cannot set environment variables");
+        return 1;
+      }
+    } else {
+      fprintf(stderr, "user '%s' not found\n", user.c_str());
+      return 1;
+    }
   } else {
     ppwd = getpwuid(uid);
     if (ppwd == NULL) {

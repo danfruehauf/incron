@@ -145,10 +145,10 @@ public:
    * \param[in] rUser user name
    * \param[in] fSysTable system table yes/no
    */
-	UserTable(EventDispatcher* pEd, const std::string& rUser, bool fSysTable);
+  UserTable(EventDispatcher* pEd, const std::string& rUser, bool fSysTable);
   
   /// Destructor.
-	virtual ~UserTable();
+  virtual ~UserTable();
   
   /// Loads the table.
   /**

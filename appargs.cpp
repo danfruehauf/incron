@@ -2,11 +2,11 @@
 /// application arguments processor implementation
 /**
  * \file appargs.cpp
- * 
+ *
  * application arguments processor
- * 
+ *
  * Copyright (C) 2007, 2008, 2012 Lukas Jelinek, <lukas@aiken.cz>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of one of the following licenses:
  *
@@ -16,10 +16,10 @@
  *
  * If you want to help with choosing the best license for you,
  * please visit http://www.gnu.org/licenses/license-list.html.
- * 
+ *
  * Credits:
  *   Christian Ruppert (new include to build with GCC 4.4+)
- * 
+ *
  */
 
 
@@ -52,7 +52,7 @@ void AppArgs::Destroy()
     delete (*it).second;
     it++;
   }
-  
+
   s_longMap.clear();
   s_shortMap.clear();
   s_valList.clear();
@@ -64,7 +64,7 @@ void AppArgs::Parse(int argc, const char* const* argv)
     // this shouldn't occur
     if (argv[i] == NULL)
       return;
-      
+
     if (IsOption(argv[i])) {
       if (IsLongOption(argv[i])) {
         std::string name, val;
@@ -116,7 +116,7 @@ bool AppArgs::IsValid()
   size_t size = s_valList.size();
   if (size < s_minCnt || size > s_maxCnt)
     return false;
-    
+
   AA_LONG_MAP::iterator it = s_longMap.begin();
   while (it != s_longMap.end()) {
     AppArgOption_t* pOpt = (*it).second;
@@ -126,7 +126,7 @@ bool AppArgs::IsValid()
       return false;
     it++;
   }
-  
+
   return true;
 }
 
@@ -141,11 +141,11 @@ bool AppArgs::GetOption(const std::string& rArg, std::string& rVal)
   AA_LONG_MAP::iterator it = s_longMap.find(rArg);
   if (it == s_longMap.end())
     return false;
-    
-  AppArgOption_t* pOpt = (*it).second; 
+
+  AppArgOption_t* pOpt = (*it).second;
   if (!(pOpt->found) || !(pOpt->hasVal))
     return false;
-    
+
   rVal = pOpt->val;
   return true;
 }
@@ -154,13 +154,13 @@ bool AppArgs::AddOption(const std::string& rName, char cShort, AppArgType_t type
 {
   if (s_longMap.find(rName) != s_longMap.end() || s_shortMap.find(cShort) != s_shortMap.end())
     return false;
-  
+
   AppArgOption_t* pOpt = new AppArgOption_t();
   pOpt->found = false;
   pOpt->hasVal = false;
   pOpt->mand = fMandatory;
   pOpt->type = type;
-  
+
   s_longMap.insert(AA_LONG_MAP::value_type(rName, pOpt));
   s_shortMap.insert(AA_SHORT_MAP::value_type(cShort, pOpt));
   return true;
@@ -175,7 +175,7 @@ bool AppArgs::GetValue(size_t index, std::string& rVal)
 {
   if (index > s_valList.size())
     return false;
-    
+
   rVal = s_valList[index];
   return true;
 }
@@ -192,17 +192,17 @@ void AppArgs::Dump()
         DumpOption((*it).first, (*it2).first, pOpt);
       }
       it2++;
-    }      
+    }
     it++;
   }
-  
+
   fprintf(stderr, "Values:\n");
-  
+
   AA_VAL_LIST::iterator it3 = s_valList.begin();
   while (it3 != s_valList.end()) {
     fprintf(stderr, "%s\n", (*it3).c_str());
     it3++;
-  }  
+  }
 }
 
 
@@ -211,7 +211,7 @@ bool AppArgs::IsOption(const char* pchStr)
 {
   if (strlen(pchStr) < 2)
     return false;
-    
+
   return pchStr[0] == '-';
 }
 
@@ -225,13 +225,13 @@ bool AppArgs::ParseLong(const char* pchStr, std::string& rName, std::string& rVa
   StringTokenizer tok(pchStr+2, '=');
   if (!tok.HasMoreTokens())
     return false;
-  
+
   rName = tok.GetNextToken();
   if (!tok.HasMoreTokens()) {
     rfHasVal = false;
     return true;
   }
-    
+
   rVal = tok.GetRemainder();
   rfHasVal = true;
   return true;
@@ -245,9 +245,9 @@ void AppArgs::ParseShort(const char* pchStr, char& rcName, std::string& rVal, bo
     rfHasVal = false;
     return;
   }
-  
+
   rVal = pchStr + 2;
-  rfHasVal = true;  
+  rfHasVal = true;
 }
 
 void AppArgs::DumpOption(const std::string& rName, char cShort, AppArgOption_t* pOpt)
@@ -263,7 +263,7 @@ void AppArgs::DumpOption(const std::string& rName, char cShort, AppArgOption_t* 
     default:;
       s = "unknown";
   }
-  
+
   fprintf(stderr, "long='%s', short='%c', type='%s', found=%s, has_value=%s, value='%s'\n",
       rName.c_str(),
       cShort,
