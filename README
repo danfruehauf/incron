@@ -2,6 +2,7 @@
 inotify cron system
 
 (c) Lukas Jelinek, 2006, 2007, 2008, 2009, 2012
+(c) Dan Fruehauf, 2015
 
 1. About
 2. Requirements
@@ -105,11 +106,8 @@ the configuration. See the example file for more information.
 
 
 5. Bugs, suggestions
-THIS PROGRAM IS AN ALPHA VERSION. IT PROBABLY CONTAINS BUGS AND
-THEREFORE IT IS NOT INTENDED FOR PRODUCTION USE.
-
 If you find a bug or have a suggestion how to improve the program,
-please use the bug tracking system at http://bts.aiken.cz.
+please use the issue tracking system at https://github.com/danfruehauf/incron/issues
 
 
 6. Licensing

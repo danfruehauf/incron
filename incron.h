@@ -27,10 +27,10 @@
 #define INCRONTAB_NAME "incrontab"
 
 /// Application version (release)
-#define INCRON_VERSION "0.5.10"
+#define INCRON_VERSION "0.6.0"
 
 /// Address for sending bugs
-#define INCRON_BUG_ADDRESS "<bugs@aiken.cz>"
+#define INCRON_BUG_ADDRESS "<malkodan@gmail.com>"
 
 /// Default configuration file
 #define INCRON_CONFIG "/etc/incron.conf"
