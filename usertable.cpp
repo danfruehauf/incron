@@ -432,10 +432,9 @@ void UserTable::OnEvent(InotifyEvent& rEvt)
           oldpos = pos + 2;
         }
         else if (cs[px] == '&') {     // numeric mask
-          char* s;
-          asprintf(&s, "%u", (unsigned) rEvt.GetMask());
+          char s[11];
+          snprintf(s, sizeof(s), "%u", (unsigned) rEvt.GetMask());
           cmd.append(s);
-          free(s);
           oldpos = pos + 2;
         }
         else {
