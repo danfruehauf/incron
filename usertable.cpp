@@ -338,7 +338,7 @@ void UserTable::Load()
     IncronTabEntry& rE = m_tab.GetEntry(i);
 
     TPathList Paths;
-    if (m_recursive)
+    if (m_recursive && IsDirectory(rE.GetPath()))
       GetDirectoryTree(rE.GetPath(), Paths);
     else
       Paths.push_back(rE.GetPath());
