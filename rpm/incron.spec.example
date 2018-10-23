@@ -1,0 +1,71 @@
+# spec file for incron
+ 
+%define _topdir     %(echo ${PWD}/rpmbuild)
+%define name        incron
+%define release     0
+%define version     0.6
+%define buildroot   %{_topdir}/%{name}-%{version}.%{release}-root
+ 
+BuildRoot:      %{buildroot}
+Summary:        incron
+License:        GPL
+Name:           %{name}
+Version:        %{version}.%{release}
+Release:        %{release}
+Source:         %{name}-%{version}.tar.gz
+Prefix:         /usr
+Group:          System Environment/Daemons
+ 
+%description
+Incron is the "inotify cron" system. It consist of a daemon and
+a table manipulator. You can use it a similar way as the regular cron.
+The difference is that the inotify cron handles filesystem events
+rather than time periods.
+ 
+%prep
+%setup -q
+ 
+%build
+make
+ 
+%install
+
+install -m 0755 -d ${RPM_BUILD_ROOT}/usr/bin
+install -m 0755 -d ${RPM_BUILD_ROOT}/usr/sbin
+install -m 0755 -d ${RPM_BUILD_ROOT}/etc/init.d
+install -m 0755 -d ${RPM_BUILD_ROOT}/etc/incron.d
+install -m 0755 -d ${RPM_BUILD_ROOT}/var/spool/incron
+
+install -m 0755 incrontab ${RPM_BUILD_ROOT}/usr/bin
+install -m 0755 incrond ${RPM_BUILD_ROOT}/usr/sbin
+install -m 0755 rpm/sysv_init ${RPM_BUILD_ROOT}/etc/init.d/incrond
+install -m 0644 incron.conf.example ${RPM_BUILD_ROOT}/etc
+
+install -m 0755 -d ${RPM_BUILD_ROOT}/usr/local/share/man/man1
+install -m 0755 -d ${RPM_BUILD_ROOT}/usr/local/share/man/man5
+install -m 0755 -d ${RPM_BUILD_ROOT}/usr/local/share/man/man8
+
+install -m 0644 incrontab.1 ${RPM_BUILD_ROOT}/usr/local/share/man/man1
+install -m 0644 incron.conf.5 ${RPM_BUILD_ROOT}/usr/local/share/man/man5
+install -m 0644 incrontab.5 ${RPM_BUILD_ROOT}/usr/local/share/man/man5
+install -m 0644 incrond.8 ${RPM_BUILD_ROOT}/usr/local/share/man/man8
+
+%clean
+rm -rf ${RPM_BUILD_ROOT}
+ 
+%files
+%defattr(-,root,root)
+
+%dir /etc/incron.d
+%dir /var/spool/incron
+
+/usr/bin/incrontab
+/usr/sbin/incrond
+/etc/init.d/incrond
+/etc/incron.conf.example
+ 
+%doc %attr(0444,root,root) /usr/local/share/man/man1/incrontab.1
+%doc %attr(0444,root,root) /usr/local/share/man/man5/incron.conf.5
+%doc %attr(0444,root,root) /usr/local/share/man/man5/incrontab.5
+%doc %attr(0444,root,root) /usr/local/share/man/man8/incrond.8
+
