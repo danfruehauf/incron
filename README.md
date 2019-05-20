@@ -45,7 +45,7 @@ anything.
 check the `PREFIX` and other common variables. If done you can
 now build the files (`make`).
 
-**The binaries must be of course installed as root.**
+**The binaries must be installed as root.**
 
 If you want to use (after editing) the example configuration
 file simply rename it from `/etc/incron.conf.example` to
